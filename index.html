@@ -82,7 +82,6 @@
       border-radius: 10px;
       line-height: 1.7;
     }
-
   </style>
 </head>
 
@@ -102,9 +101,8 @@
     </div>
   </div>
 
-  <a href="https://drive.google.com/uc?export=download&id=1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5&confirm=t">
-    <button id="installBtn" class="install-btn" onclick="downloadGame()">تثبيت</button>
-  </a>
+  <!-- زر التثبيت -->
+  <button id="installBtn" class="install-btn" onclick="downloadGame()">تثبيت</button>
 
   <div class="stats">
     <div>
@@ -117,10 +115,7 @@
 
   <div class="description">
     في عالم المراحل، يتم سرقة مفتاح غامض يقود إلى باب مجهول... باب لا أحد يعرف ما يخفي وراءه.
-
-    في LevelChase، تبدأ رحلة مطاردة مليئة بالإثارة والتحدي، حيث يجب عليك اللحاق بالسارق عبر مستويات متغيرة مليئة بالعقبات.
-
-    كل مستوى يقربك خطوة من الحقيقة... ولكن هل أنت مستعد؟
+    في LevelChase، تبدأ رحلة مطاردة مليئة بالإثارة والتحدي.
   </div>
 
 </div>
@@ -129,7 +124,7 @@
 
 // 🔥 Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ⚠️ ضع بياناتك هنا
 const firebaseConfig = {
@@ -157,17 +152,22 @@ async function loadDownloads() {
 
 // زر تحميل
 window.downloadGame = async function () {
+
+  // 🔥 زيادة من الباك اند
+  await updateDoc(counterRef, {
+    count: increment(1)
+  });
+
+  // تحديث الواجهة
   let current = parseInt(document.getElementById("downloads").innerText);
-
-  current++;
-
-  await updateDoc(counterRef, { count: current });
-
-  document.getElementById("downloads").innerText = current;
+  document.getElementById("downloads").innerText = current + 1;
 
   let btn = document.getElementById("installBtn");
-  btn.innerText = "تم التثبيت ✓";
+  btn.innerText = "جارٍ التحميل...";
   btn.style.background = "gray";
+
+  // 🚀 بدء التحميل
+  window.location.href = "https://drive.google.com/file/d/1DiX-9dGGvQb5LqjMjEbWvpJ_X5tBGUfk/view?usp=sharing";
 };
 
 // صور عشوائية
