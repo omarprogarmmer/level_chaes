@@ -150,24 +150,23 @@ async function loadDownloads() {
   }
 }
 
-// زر تحميل
+// زر التحويل إلى Google Drive
 window.downloadGame = async function () {
 
-  // 🔥 زيادة من الباك اند
+  // زيادة العداد
   await updateDoc(counterRef, {
     count: increment(1)
   });
 
-  // تحديث الواجهة
   let current = parseInt(document.getElementById("downloads").innerText);
   document.getElementById("downloads").innerText = current + 1;
 
   let btn = document.getElementById("installBtn");
-  btn.innerText = "جارٍ التحميل...";
+  btn.innerText = "جارٍ التحويل...";
   btn.style.background = "gray";
 
-  // 🚀 بدء التحميل
-  window.location.href = "https://drive.google.com/file/d/1DiX-9dGGvQb5LqjMjEbWvpJ_X5tBGUfk/view?usp=sharing";
+  // 🚀 فتح صفحة الملف (بدون تحميل مباشر)
+  window.location.href = "https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view?usp=sharing";
 };
 
 // صور عشوائية
