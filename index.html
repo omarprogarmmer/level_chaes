@@ -52,12 +52,6 @@
       cursor: pointer;
     }
 
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 20px;
-    }
-
     .screenshots {
       display: flex;
       gap: 10px;
@@ -102,14 +96,7 @@
   </div>
 
   <!-- زر التثبيت -->
-  <button id="installBtn" class="install-btn" onclick="downloadGame()">تثبيت</button>
-
-  <div class="stats">
-    <div>
-      <span id="downloads">0</span><br>
-      تحميل
-    </div>
-  </div>
+  <button class="install-btn" onclick="openGamePage()">تثبيت</button>
 
   <div class="screenshots"></div>
 
@@ -120,54 +107,12 @@
 
 </div>
 
-<script type="module">
+<script>
 
-// 🔥 Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// ⚠️ ضع بياناتك هنا
-const firebaseConfig = {
-  apiKey: "PUT-HERE",
-  authDomain: "PUT-HERE",
-  projectId: "PUT-HERE",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const counterRef = doc(db, "game", "downloads");
-
-// تحميل العدد
-async function loadDownloads() {
-  const snap = await getDoc(counterRef);
-
-  if (snap.exists()) {
-    document.getElementById("downloads").innerText = snap.data().count;
-  } else {
-    await setDoc(counterRef, { count: 0 });
-    document.getElementById("downloads").innerText = 0;
-  }
+// فتح صفحة Google Drive فقط
+function openGamePage() {
+  window.open("https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view", "_blank");
 }
-
-// زر التحويل إلى Google Drive
-window.downloadGame = async function () {
-
-  // زيادة العداد
-  await updateDoc(counterRef, {
-    count: increment(1)
-  });
-
-  let current = parseInt(document.getElementById("downloads").innerText);
-  document.getElementById("downloads").innerText = current + 1;
-
-  let btn = document.getElementById("installBtn");
-  btn.innerText = "جارٍ التحويل...";
-  btn.style.background = "gray";
-
-  // 🚀 فتح صفحة الملف (بدون تحميل مباشر)
-  window.location.href = "https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view?usp=drive_link";
-};
 
 // صور عشوائية
 const images = ["1.png","2.png","3.png","4.png"];
@@ -183,8 +128,6 @@ shuffle(images).forEach(img => {
   el.src = img;
   container.appendChild(el);
 });
-
-loadDownloads();
 
 </script>
 
