@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LevelChase</title>
+  <title>LevelChase - متجر الألعاب</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;600;900&display=swap" rel="stylesheet">
+  <link href="https://drive.usercontent.google.com/download?id=1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5&export=download&authuser=0" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; }
@@ -49,7 +49,26 @@
       width: 100%;
       border-radius: 12px;
       font-size: 1.2em;
+      font-weight: bold;
       cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .install-btn:hover {
+      background: #00c853;
+      transform: scale(1.02);
+    }
+
+    /* عداد التنزيلات */
+    .download-counter {
+      margin-top: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #ffd700;
     }
 
     .screenshots {
@@ -88,7 +107,7 @@
 <div class="container">
 
   <div class="app-header">
-    <img src="icon.png" class="app-icon">
+    <img src="icon.png" class="app-icon" alt="App Icon">
     <div>
       <h1>LevelChase</h1>
       <p>Omar GameCraft</p>
@@ -96,36 +115,99 @@
   </div>
 
   <!-- زر التثبيت -->
-  <button class="install-btn" onclick="openGamePage()">تثبيت</button>
+  <button class="install-btn" onclick="openGamePage()">📥 تثبيت</button>
+
+  <!-- عداد التنزيلات الحقيقي -->
+  <div class="download-counter">
+    ⬇️ عدد مرات التحميل: <span id="download-count">0</span>
+  </div>
 
   <div class="screenshots"></div>
 
   <div class="description">
     في عالم المراحل، يتم سرقة مفتاح غامض يقود إلى باب مجهول... باب لا أحد يعرف ما يخفي وراءه.
-    في LevelChase، تبدأ رحلة مطاردة مليئة بالإثارة والتحدي.
+    في LevelChase، تبدأ رحلة مطاردة مليئة بالتحدي.
   </div>
 
 </div>
 
 <script>
 
-// فتح صفحة Google Drive فقط
-function openGamePage() {
-  window.open("https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view", "_blank");
+// ==========================================
+// نظام عداد التنزيلات الحقيقي (localStorage)
+// ==========================================
+
+// مفتاح التخزين
+const STORAGE_KEY = "LevelChase_Download";
+const USER_DOWNLOADED_KEY = "LevelChase_UserDownloaded";
+
+// 1. استرجاع العداد الحالي
+let downloadCount = localStorage.getItem(STORAGE_KEY);
+if (downloadCount === null) {
+  downloadCount = 0;
+} else {
+  downloadCount = parseInt(downloadCount);
 }
 
-// صور عشوائية
+// 2. عرض العداد على الصفحة
+const countSpan = document.getElementById("download-count");
+countSpan.textContent = downloadCount;
+
+// 3. دالة زيادة العداد
+function increaseDownloadCount() {
+  // التحقق إذا كان هذا المستخدم قد حمّل من قبل (لمنع التكرار من نفس الشخص)
+  let hasDownloaded = localStorage.getItem(USER_DOWNLOADED_KEY);
+  
+  if (!hasDownloaded) {
+    // زيادة العداد الحقيقي
+    downloadCount++;
+    localStorage.setItem(STORAGE_KEY, downloadCount);
+    countSpan.textContent = downloadCount;
+    
+    // تسجيل أن هذا المستخدم قام بالتحميل
+    localStorage.setItem(USER_DOWNLOADED_KEY, "true");
+    
+    return true; // تمت الزيادة
+  } else {
+    return false; // هذا المستخدم سبق له التحميل
+  }
+}
+
+// 4. فتح صفحة Google Drive مع تحديث العداد
+function openGamePage() {
+  // زيادة العداد مرة واحدة فقط لكل مستخدم
+  const isIncreased = increaseDownloadCount();
+  
+  // فتح رابط التحميل
+  window.open("https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view", "_blank");
+  
+  // رسالة اختيارية للمستخدم (يمكنك إزالتها)
+  if (!isIncreased) {
+    setTimeout(() => {
+      console.log("لقد قمت بالتحميل مسبقاً، لن يتم تكرار العداد.");
+    }, 500);
+  }
+}
+
+// ==========================================
+// الصور العشوائية
+// ==========================================
 const images = ["1.png","2.png","3.png","4.png"];
 
 function shuffle(arr) {
-  return arr.sort(() => Math.random() - 0.5);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 const container = document.querySelector(".screenshots");
 
-shuffle(images).forEach(img => {
+shuffle([...images]).forEach(img => {
   let el = document.createElement("img");
   el.src = img;
+  el.alt = "Screenshot";
   container.appendChild(el);
 });
 
