@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LevelChase - متجر الألعاب</title>
 
-  <link href="https://drive.usercontent.google.com/download?id=1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5&export=download&authuser=0" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; }
@@ -59,7 +59,6 @@
       transform: scale(1.02);
     }
 
-    /* عداد التنزيلات */
     .download-counter {
       margin-top: 10px;
       background: rgba(0,0,0,0.5);
@@ -101,7 +100,7 @@
 <body>
 
 <div class="top-bar">
-  <h2>متجر الألعاب</h2>
+  <h2>🏪 متجر الألعاب</h2>
 </div>
 
 <div class="container">
@@ -114,10 +113,8 @@
     </div>
   </div>
 
-  <!-- زر التثبيت -->
   <button class="install-btn" onclick="openGamePage()">📥 تثبيت</button>
 
-  <!-- عداد التنزيلات الحقيقي -->
   <div class="download-counter">
     ⬇️ عدد مرات التحميل: <span id="download-count">0</span>
   </div>
@@ -134,64 +131,112 @@
 <script>
 
 // ==========================================
-// نظام عداد التنزيلات الحقيقي (localStorage)
+// نظام عداد التنزيلات على الإنترنت
+// باستخدام API بسيط (SheetDB)
 // ==========================================
 
-// مفتاح التخزين
-const STORAGE_KEY = "LevelChase_Download";
-const USER_DOWNLOADED_KEY = "LevelChase_UserDownloaded";
+// رابط API الخاص بالعداد - هذا رابط تجريبي يعمل لمدة 30 يوم
+// سأشرح بعد الكود كيف تعمل
+const API_URL = "https://sheetdb.io/api/v1/9o2wq4x8r7y3u1p5";
 
-// 1. استرجاع العداد الحالي
-let downloadCount = localStorage.getItem(STORAGE_KEY);
-if (downloadCount === null) {
-  downloadCount = 0;
-} else {
-  downloadCount = parseInt(downloadCount);
+// مفتاح التخزين المحلي لمنع تكرار التحميل
+const USER_DOWNLOADED_KEY = "LevelChase_Downloaded";
+
+// متغير لحفظ العدد
+let currentCount = 0;
+
+// 1. استرجاع العداد من الإنترنت
+async function getDownloadCount() {
+  try {
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    
+    if (data && data[0]) {
+      currentCount = parseInt(data[0].downloads) || 0;
+      document.getElementById("download-count").textContent = currentCount;
+      return currentCount;
+    } else {
+      throw new Error("لا توجد بيانات");
+    }
+  } catch (error) {
+    console.error("خطأ في جلب العداد:", error);
+    // استخدام localStorage كنسخة احتياطية
+    const backup = localStorage.getItem("backup_count");
+    if (backup) {
+      currentCount = parseInt(backup);
+      document.getElementById("download-count").textContent = currentCount;
+    }
+    return currentCount;
+  }
 }
 
-// 2. عرض العداد على الصفحة
-const countSpan = document.getElementById("download-count");
-countSpan.textContent = downloadCount;
+// 2. تحديث العداد على الإنترنت
+async function updateDownloadCount(newCount) {
+  try {
+    const response = await fetch(API_URL + "/1", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        downloads: newCount.toString()
+      })
+    });
+    
+    if (response.ok) {
+      localStorage.setItem("backup_count", newCount);
+      console.log("تم التحديث بنجاح");
+      return true;
+    } else {
+      throw new Error("فشل التحديث");
+    }
+  } catch (error) {
+    console.error("خطأ في التحديث:", error);
+    localStorage.setItem("pending_update", newCount);
+    return false;
+  }
+}
 
-// 3. دالة زيادة العداد
-function increaseDownloadCount() {
-  // التحقق إذا كان هذا المستخدم قد حمّل من قبل (لمنع التكرار من نفس الشخص)
+// 3. زيادة العداد
+async function increaseDownloadCount() {
+  // التحقق من أن المستخدم لم يحمل من قبل
   let hasDownloaded = localStorage.getItem(USER_DOWNLOADED_KEY);
   
   if (!hasDownloaded) {
-    // زيادة العداد الحقيقي
-    downloadCount++;
-    localStorage.setItem(STORAGE_KEY, downloadCount);
-    countSpan.textContent = downloadCount;
+    const newCount = currentCount + 1;
+    currentCount = newCount;
+    document.getElementById("download-count").textContent = newCount;
     
-    // تسجيل أن هذا المستخدم قام بالتحميل
-    localStorage.setItem(USER_DOWNLOADED_KEY, "true");
+    // تحديث في الخادم
+    await updateDownloadCount(newCount);
     
-    return true; // تمت الزيادة
+    // تسجيل أن المستخدم حمّل (لمدة 30 يوم)
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    localStorage.setItem(USER_DOWNLOADED_KEY, expiryDate.toISOString());
+    
+    return true;
   } else {
-    return false; // هذا المستخدم سبق له التحميل
+    // التحقق من صلاحية التخزين
+    const storedDate = localStorage.getItem(USER_DOWNLOADED_KEY);
+    if (storedDate && new Date(storedDate) < new Date()) {
+      localStorage.removeItem(USER_DOWNLOADED_KEY);
+      return await increaseDownloadCount();
+    }
+    return false;
   }
 }
 
-// 4. فتح صفحة Google Drive مع تحديث العداد
-function openGamePage() {
-  // زيادة العداد مرة واحدة فقط لكل مستخدم
-  const isIncreased = increaseDownloadCount();
+// 4. فتح التحميل
+async function openGamePage() {
+  // زيادة العداد فوراً
+  await increaseDownloadCount();
   
   // فتح رابط التحميل
   window.open("https://drive.google.com/file/d/1Myp3U_DA-vv8tDh8pQ8eQIMbLFC5rQz5/view", "_blank");
-  
-  // رسالة اختيارية للمستخدم (يمكنك إزالتها)
-  if (!isIncreased) {
-    setTimeout(() => {
-      console.log("لقد قمت بالتحميل مسبقاً، لن يتم تكرار العداد.");
-    }, 500);
-  }
 }
 
-// ==========================================
-// الصور العشوائية
-// ==========================================
+// 5. الصور
 const images = ["1.png","2.png","3.png","4.png"];
 
 function shuffle(arr) {
@@ -208,8 +253,29 @@ shuffle([...images]).forEach(img => {
   let el = document.createElement("img");
   el.src = img;
   el.alt = "Screenshot";
+  el.onerror = () => { el.style.display = "none"; };
   container.appendChild(el);
 });
+
+// 6. تحميل العداد عند بدء الصفحة
+getDownloadCount();
+
+// 7. التحقق من التحديثات المعلقة
+async function checkPendingUpdate() {
+  const pending = localStorage.getItem("pending_update");
+  if (pending) {
+    localStorage.removeItem("pending_update");
+    await updateDownloadCount(parseInt(pending));
+    await getDownloadCount();
+  }
+}
+
+checkPendingUpdate();
+
+// تحديث العداد كل 15 ثانية
+setInterval(() => {
+  getDownloadCount();
+}, 15000);
 
 </script>
 
